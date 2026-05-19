@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Materials Scientist — 多智能体驱动的材料研发平台</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060f;--bg-card:#0d0d1a;--bg-card-hover:#12122a;
+  --text:#e8e8f0;--text-secondary:#9898b0;--text-dim:#686880;
+  --accent:#7c5cfc;--accent2:#00c8ff;--accent3:#a855f7;
+  --glow-purple:rgba(124,92,252,.15);--glow-cyan:rgba(0,200,255,.12);
+  --border:rgba(255,255,255,.06);--border-hover:rgba(124,92,252,.4);
+  --radius:16px;--radius-sm:10px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --max-w:1200px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+
+/* ===== NAVBAR ===== */
+.navbar{position:fixed;top:0;left:0;width:100%;z-index:100;
+  background:rgba(6,6,15,.72);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);transition:background .3s}
+.navbar .inner{max-width:var(--max-w);margin:0 auto;padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;letter-spacing:-.02em}
+.logo svg{width:32px;height:32px}
+.nav-links{display:flex;gap:6px;align-items:center}
+.nav-links a{padding:7px 14px;border-radius:8px;font-size:.875rem;color:var(--text-secondary);transition:all .2s}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,.06)}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;font-size:.9rem;
+  font-weight:600;cursor:pointer;border:none;transition:all .25s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#6a48f0;transform:translateY(-1px);box-shadow:0 8px 30px rgba(124,92,252,.35)}
+.btn-secondary{background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--border)}
+.btn-secondary:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.15)}
+.nav-cta{margin-left:8px}
+.hamburger{display:none;background:none;border:none;color:#fff;cursor:pointer;padding:4px}
+
+/* ===== HERO ===== */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:140px 32px 100px;overflow:hidden}
+.hero-glow{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;opacity:.5}
+.hero-glow-1{width:600px;height:600px;background:radial-gradient(circle,rgba(124,92,252,.3),transparent 70%);
+  top:-10%;left:30%;animation:pulse-glow 8s ease-in-out infinite}
+.hero-glow-2{width:500px;height:500px;background:radial-gradient(circle,rgba(0,200,255,.2),transparent 70%);
+  bottom:0;right:15%;animation:pulse-glow 10s ease-in-out 2s infinite}
+.hero-glow-3{width:400px;height:400px;background:radial-gradient(circle,rgba(168,85,247,.2),transparent 70%);
+  top:30%;right:50%;animation:pulse-glow 12s ease-in-out 4s infinite}
+@keyframes pulse-glow{0%,100%{transform:scale(1);opacity:.45}50%{transform:scale(1.15);opacity:.65}}
+
+.hero-content{position:relative;z-index:2;max-width:800px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;
+  border-radius:20px;border:1px solid var(--border);background:rgba(124,92,252,.08);
+  font-size:.8rem;color:var(--accent);margin-bottom:28px;letter-spacing:.03em}
+.hero-badge svg{width:16px;height:16px}
+.hero h1{font-size:clamp(2.6rem,6vw,4.2rem);font-weight:800;letter-spacing:-.03em;
+  line-height:1.15;margin-bottom:16px;
+  background:linear-gradient(135deg,#fff 0%,#c8c0ff 50%,var(--accent2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h2{font-size:clamp(1.1rem,2.5vw,1.5rem);font-weight:400;color:var(--text-secondary);
+  margin-bottom:28px;letter-spacing:-.01em}
+.hero p{font-size:1.05rem;color:var(--text-secondary);max-width:620px;margin:0 auto 40px;line-height:1.8}
+.hero-buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* ===== SECTIONS SHARED ===== */
+section{padding:100px 32px;position:relative}
+.section-inner{max-width:var(--max-w);margin:0 auto}
+.section-label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:16px;
+  border:1px solid var(--border);background:rgba(124,92,252,.06);
+  font-size:.78rem;color:var(--accent);margin-bottom:20px;letter-spacing:.04em;text-transform:uppercase}
+.section-title{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;letter-spacing:-.025em;
+  line-height:1.2;margin-bottom:16px}
+.section-desc{font-size:1.05rem;color:var(--text-secondary);max-width:640px;line-height:1.8;margin-bottom:48px}
+.section-center{text-align:center}
+.section-center .section-desc{margin-left:auto;margin-right:auto}
+
+/* ===== ACHIEVEMENTS ===== */
+.achievements-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.achievement-card{position:relative;background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:36px 30px;transition:all .35s;overflow:hidden}
+.achievement-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity .3s}
+.achievement-card:hover{border-color:var(--border-hover);transform:translateY(-4px);
+  box-shadow:0 20px 60px rgba(124,92,252,.1)}
+.achievement-card:hover::before{opacity:1}
+.achievement-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(124,92,252,.15),rgba(0,200,255,.1));margin-bottom:20px}
+.achievement-icon svg{width:24px;height:24px;color:var(--accent)}
+.achievement-card h3{font-size:1.2rem;font-weight:700;margin-bottom:8px;color:#fff}
+.achievement-card .metric{font-size:1.8rem;font-weight:800;margin-bottom:12px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.achievement-card p{font-size:.92rem;color:var(--text-secondary);line-height:1.7}
+
+/* ===== PAIN POINTS ===== */
+.pain-section{background:linear-gradient(180deg,transparent 0%,rgba(124,92,252,.03) 50%,transparent 100%)}
+.pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.pain-card{padding:36px 30px;border-radius:var(--radius);border:1px solid var(--border);
+  background:var(--bg-card);transition:all .3s}
+.pain-card:hover{border-color:rgba(255,100,100,.25);background:rgba(255,60,60,.03)}
+.pain-num{font-size:2.2rem;font-weight:800;color:rgba(255,255,255,.08);margin-bottom:12px}
+.pain-card h3{font-size:1.1rem;font-weight:600;margin-bottom:10px;color:#fff}
+.pain-card p{font-size:.92rem;color:var(--text-secondary);line-height:1.7}
+
+/* ===== METHODOLOGY (TABS) ===== */
+.method-tabs{display:flex;gap:4px;margin-bottom:36px;background:rgba(255,255,255,.04);
+  border-radius:12px;padding:4px;width:fit-content}
+.method-tab{padding:10px 24px;border-radius:10px;font-size:.9rem;font-weight:500;
+  color:var(--text-secondary);cursor:pointer;border:none;background:none;transition:all .25s}
+.method-tab.active{background:var(--accent);color:#fff}
+.method-tab:hover:not(.active){color:#fff;background:rgba(255,255,255,.06)}
+.method-panel{display:none;animation:fadeUp .4s ease}
+.method-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.method-panel h3{font-size:1.5rem;font-weight:700;margin-bottom:16px;color:#fff}
+.method-panel p{font-size:.95rem;color:var(--text-secondary);line-height:1.85;margin-bottom:20px}
+.method-visual{position:relative;background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:40px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:280px;overflow:hidden}
+.method-visual::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,var(--glow-purple),transparent 70%);pointer-events:none;opacity:.6}
+.method-visual svg{width:120px;height:120px;opacity:.7;position:relative;z-index:1}
+.method-link{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-size:.9rem;font-weight:500}
+.method-link:hover{text-decoration:underline}
+.method-link svg{width:16px;height:16px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== PLATFORM ENTRIES ===== */
+.entries-section{position:relative}
+.entries-section::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:800px;height:800px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,200,255,.06),transparent 70%);pointer-events:none}
+.entries-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;position:relative;z-index:1}
+.entry-card{position:relative;background:var(--bg-card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:36px 24px;text-align:center;transition:all .4s;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center}
+.entry-card::before{content:'';position:absolute;inset:0;border-radius:var(--radius);opacity:0;
+  transition:opacity .4s;pointer-events:none}
+.entry-card:nth-child(1)::before{background:radial-gradient(ellipse at 50% 0%,rgba(124,92,252,.12),transparent 70%)}
+.entry-card:nth-child(2)::before{background:radial-gradient(ellipse at 50% 0%,rgba(0,200,255,.12),transparent 70%)}
+.entry-card:nth-child(3)::before{background:radial-gradient(ellipse at 50% 0%,rgba(168,85,247,.12),transparent 70%)}
+.entry-card:nth-child(4)::before{background:radial-gradient(ellipse at 50% 0%,rgba(34,197,94,.12),transparent 70%)}
+.entry-card:nth-child(5)::before{background:radial-gradient(ellipse at 50% 0%,rgba(251,146,60,.12),transparent 70%)}
+.entry-card:hover{transform:translateY(-6px);border-color:var(--border-hover)}
+.entry-card:hover::before{opacity:1}
+.entry-icon{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:22px;position:relative;z-index:1}
+.entry-card:nth-child(1) .entry-icon{background:linear-gradient(135deg,rgba(124,92,252,.18),rgba(124,92,252,.06))}
+.entry-card:nth-child(2) .entry-icon{background:linear-gradient(135deg,rgba(0,200,255,.18),rgba(0,200,255,.06))}
+.entry-card:nth-child(3) .entry-icon{background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(168,85,247,.06))}
+.entry-card:nth-child(4) .entry-icon{background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(34,197,94,.06))}
+.entry-card:nth-child(5) .entry-icon{background:linear-gradient(135deg,rgba(251,146,60,.18),rgba(251,146,60,.06))}
+.entry-icon svg{width:28px;height:28px}
+.entry-card h3{font-size:1.1rem;font-weight:700;margin-bottom:10px;color:#fff;position:relative;z-index:1}
+.entry-card p{font-size:.85rem;color:var(--text-secondary);line-height:1.65;margin-bottom:22px;
+  position:relative;z-index:1;flex:1}
+.entry-btn{padding:9px 20px;border-radius:8px;font-size:.85rem;font-weight:600;
+  border:1px solid var(--border);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;
+  transition:all .25s;position:relative;z-index:1}
+.entry-card:nth-child(1):hover .entry-btn{background:rgba(124,92,252,.15);border-color:rgba(124,92,252,.4)}
+.entry-card:nth-child(2):hover .entry-btn{background:rgba(0,200,255,.15);border-color:rgba(0,200,255,.4)}
+.entry-card:nth-child(3):hover .entry-btn{background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.4)}
+.entry-card:nth-child(4):hover .entry-btn{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4)}
+.entry-card:nth-child(5):hover .entry-btn{background:rgba(251,146,60,.15);border-color:rgba(251,146,60,.4)}
+
+/* ===== VISION ===== */
+.vision-section{text-align:center;position:relative;overflow:hidden}
+.vision-section::before{content:'';position:absolute;bottom:-200px;left:50%;transform:translateX(-50%);
+  width:900px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,92,252,.08),transparent 70%);pointer-events:none}
+.vision-quote{font-size:clamp(1.15rem,2.5vw,1.4rem);color:var(--text-secondary);
+  max-width:720px;margin:0 auto 40px;line-height:1.85;font-style:italic;position:relative;z-index:1}
+.vision-quote::before{content:'\201C';font-size:4rem;color:var(--accent);opacity:.3;
+  position:absolute;top:-20px;left:-20px;font-style:normal}
+
+/* ===== FOOTER ===== */
+.footer{border-top:1px solid var(--border);padding:40px 32px;text-align:center}
+.footer-inner{max-width:var(--max-w);margin:0 auto;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer p{font-size:.85rem;color:var(--text-dim)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font-size:.85rem;color:var(--text-dim);transition:color .2s}
+.footer-links a:hover{color:var(--accent)}
+
+/* ===== SCROLL ANIMATIONS ===== */
+.reveal{opacity:0;transform:translateY(30px);transition:all .7s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+.reveal-delay-5{transition-delay:.5s}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1080px){
+  .entries-grid{grid-template-columns:repeat(3,1fr)}
+  .method-panel.active{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .nav-links{display:none;position:absolute;top:64px;left:0;right:0;
+    background:rgba(6,6,15,.95);backdrop-filter:blur(20px);
+    flex-direction:column;padding:16px 24px;border-bottom:1px solid var(--border)}
+  .nav-links.open{display:flex}
+  .hamburger{display:block}
+  .achievements-grid,.pain-grid{grid-template-columns:1fr}
+  .entries-grid{grid-template-columns:repeat(2,1fr)}
+  section{padding:72px 20px}
+  .hero{padding:120px 20px 72px}
+}
+@media(max-width:480px){
+  .entries-grid{grid-template-columns:1fr}
+  .hero-buttons{flex-direction:column;align-items:center}
+  .footer-inner{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <div class="inner">
+    <a href="#" class="logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="8" fill="url(#logo-grad)"/>
+        <path d="M8 22V10l8 6-8 6z" fill="#fff" opacity=".9"/>
+        <path d="M16 22V10l8 6-8 6z" fill="#fff" opacity=".5"/>
+        <defs><linearGradient id="logo-grad" x1="0" y1="0" x2="32" y2="32">
+          <stop stop-color="#7c5cfc"/><stop offset="1" stop-color="#00c8ff"/></linearGradient></defs>
+      </svg>
+      AI Materials Scientist
+    </a>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div class="nav-links">
+      <a href="#entries">知识库</a>
+      <a href="#entries">配方库</a>
+      <a href="#entries">材料研发</a>
+      <a href="#entries">材料设计</a>
+      <a href="#entries">AI 实验室</a>
+      <a href="#entries" class="btn btn-primary nav-cta" style="font-size:.85rem;padding:8px 18px">开始使用</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-glow hero-glow-1"></div>
+  <div class="hero-glow hero-glow-2"></div>
+  <div class="hero-glow hero-glow-3"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a2 2 0 012 2v1h1a2 2 0 012 2v1a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h1V3a2 2 0 012-2zm3 9a3 3 0 01-6 0h6z"/></svg>
+      Multi-Agent Driven Platform
+    </div>
+    <h1>AI Materials Scientist</h1>
+    <h2>多智能体驱动的材料研发平台</h2>
+    <p>基于大模型推理与多智能体协作，构建"知识引擎 + 科学模型 + 自驱动实验"三位一体的材料研发体系。让材料研发从局部经验搜索，走向数据、模型、知识与实验协同驱动。</p>
+    <div class="hero-buttons">
+      <a href="#entries" class="btn btn-primary">
+        进入平台
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="#achievements" class="btn btn-secondary">了解更多</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ACHIEVEMENTS ===== -->
+<section id="achievements">
+  <div class="section-inner section-center">
+    <div class="section-label">Proven Results</div>
+    <h2 class="section-title reveal">落地成果</h2>
+    <p class="section-desc reveal">在小米的材料研发实践中，AI 已开始参与真实工程问题的解决，并在不同材料体系和产品场景中形成落地验证。</p>
+    <div class="achievements-grid">
+      <div class="achievement-card reveal reveal-delay-1">
+        <div class="achievement-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 3v18m0-18l-4 4m4-4l4 4M3 12h18"/></svg>
+        </div>
+        <h3>一体化压铸泰坦合金</h3>
+        <div class="metric">量产落地</div>
+        <p>基于小样本性能预测模型，辅助材料方案设计与性能判断。截至 2026 年 6 月，小米汽车量产车型后地板均采用泰坦合金。</p>
+      </div>
+      <div class="achievement-card reveal reveal-delay-2">
+        <div class="achievement-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h3>2200MPa 小米超强钢</h3>
+        <div class="metric">2443 万+</div>
+        <p>AI 模型参与大规模材料搜索，从约 2443 万候选空间中筛选方案。已应用于 SU7 内嵌式防滚架和四门防撞梁。</p>
+      </div>
+      <div class="achievement-card reveal reveal-delay-3">
+        <div class="achievement-icon">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <h3>高性能镁合金</h3>
+        <div class="metric">跨尺度突破</div>
+        <p>与上海交通大学联合，探索 DeepLight X AgentMat 轻合金大模型多智能体设计平台，成功研制出高性能镁合金。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PAIN POINTS ===== -->
+<section class="pain-section">
+  <div class="section-inner section-center">
+    <div class="section-label">Challenges</div>
+    <h2 class="section-title reveal">材料研发的三大挑战</h2>
+    <p class="section-desc reveal">传统研发方式高度依赖专家经验和反复试错，一款高性能材料的研发周期往往以年计。</p>
+    <div class="pain-grid">
+      <div class="pain-card reveal reveal-delay-1">
+        <div class="pain-num">01</div>
+        <h3>前沿跟踪成本高</h3>
+        <p>材料前沿研究发展迅速，依靠专家长期跟踪所有方向的成本越来越高，关键信息容易遗漏。</p>
+      </div>
+      <div class="pain-card reveal reveal-delay-2">
+        <div class="pain-num">02</div>
+        <h3>高质量数据匮乏</h3>
+        <p>很多材料体系缺少高质量数据积累，实验样本少、数据分散，限制了传统模型的预测能力。</p>
+      </div>
+      <div class="pain-card reveal reveal-delay-3">
+        <div class="pain-num">03</div>
+        <h3>验证周期漫长</h3>
+        <p>材料方案的验证高度依赖人工实验制备与测试，研发周期长，反馈速度慢，优化方向难以及时明确。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== METHODOLOGY ===== -->
+<section id="methodology">
+  <div class="section-inner">
+    <div class="section-label">Methodology</div>
+    <h2 class="section-title reveal">材料研发范式的三阶段升级</h2>
+    <p class="section-desc reveal">基于大模型和自驱动实验平台，构建干湿闭环材料设计方案。</p>
+    <div class="method-tabs reveal">
+      <button class="method-tab active" data-tab="tab1">知识引擎</button>
+      <button class="method-tab" data-tab="tab2">科学模型</button>
+      <button class="method-tab" data-tab="tab3">闭环体系</button>
+    </div>
+    <div class="method-panel active" id="tab1">
+      <div>
+        <h3>将隐性经验沉淀为 Agent 推理的知识引擎</h3>
+        <p>材料研发最关键的知识，往往不是公开文献里的显性规律，而是专家在长期试错中积累的配方直觉、工艺窍门和失败教训。</p>
+        <p>通过知识库、知识图谱、案例拆解、实验复盘和专家反馈，将隐性经验转化为可检索、可关联、可验证、可迭代的知识单元，为 Agent 的推理和决策提供长期知识引擎。</p>
+        <a href="#entries" class="method-link">
+          探索知识库
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+      <div class="method-visual">
+        <svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1" opacity=".5">
+          <circle cx="60" cy="60" r="50" stroke="url(#g1)"/>
+          <circle cx="60" cy="60" r="35" stroke="url(#g1)" opacity=".6"/>
+          <circle cx="60" cy="60" r="20" stroke="url(#g1)" opacity=".3"/>
+          <circle cx="60" cy="30" r="4" fill="#7c5cfc"/>
+          <circle cx="85" cy="65" r="4" fill="#00c8ff"/>
+          <circle cx="40" cy="80" r="4" fill="#a855f7"/>
+          <line x1="60" y1="30" x2="85" y2="65" stroke="#7c5cfc" opacity=".3"/>
+          <line x1="85" y1="65" x2="40" y2="80" stroke="#00c8ff" opacity=".3"/>
+          <line x1="40" y1="80" x2="60" y2="30" stroke="#a855f7" opacity=".3"/>
+          <defs><linearGradient id="g1"><stop stop-color="#7c5cfc"/><stop offset="1" stop-color="#00c8ff"/></linearGradient></defs>
+        </svg>
+      </div>
+    </div>
+    <div class="method-panel" id="tab2">
+      <div>
+        <h3>用专业科学模型支撑 Agent 的决策上限</h3>
+        <p>构建 "Agent + Scientific Models" 的双层能力体系：Agent 负责理解研发目标、拆解任务、组织上下文和协同决策。</p>
+        <p>专业科学模型作为底层引擎，承担预测、优化、筛选和验证等关键任务——贝叶斯优化、仿真+多尺度预测的机理启发模型，以及面向特定材料体系训练的小模型。</p>
+        <a href="#entries" class="method-link">
+          探索材料设计
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+      <div class="method-visual">
+        <svg viewBox="0 0 120 120" fill="none" stroke-width="1">
+          <rect x="15" y="70" width="25" height="35" rx="4" stroke="#7c5cfc" opacity=".6"/>
+          <rect x="47" y="50" width="25" height="55" rx="4" stroke="#00c8ff" opacity=".6"/>
+          <rect x="79" y="30" width="25" height="75" rx="4" stroke="#a855f7" opacity=".6"/>
+          <path d="M27 68L60 48L92 28" stroke="url(#g1)" stroke-width="2" opacity=".5"/>
+          <circle cx="27" cy="68" r="3" fill="#7c5cfc"/>
+          <circle cx="60" cy="48" r="3" fill="#00c8ff"/>
+          <circle cx="92" cy="28" r="3" fill="#a855f7"/>
+        </svg>
+      </div>
+    </div>
+    <div class="method-panel" id="tab3">
+      <div>
+        <h3>打通设计、实验与反馈的自驱动闭环</h3>
+        <p>Agent 生成设计方案，驱动实验或调用实验平台，接收测试结果，并将结果回写知识库、知识图谱和模型系统中，推动下一轮优化。</p>
+        <p>构建"自主设计—实验验证—数据反馈—方案迭代"的闭环体系，实现 AI 自驱动、自进化闭环。</p>
+        <a href="#entries" class="method-link">
+          探索 AI 实验室
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+      </div>
+      <div class="method-visual">
+        <svg viewBox="0 0 120 120" fill="none" stroke-width="1.5">
+          <path d="M60 20 A40 40 0 0 1 100 60" stroke="#7c5cfc" fill="none"/>
+          <path d="M100 60 A40 40 0 0 1 60 100" stroke="#00c8ff" fill="none"/>
+          <path d="M60 100 A40 40 0 0 1 20 60" stroke="#a855f7" fill="none"/>
+          <path d="M20 60 A40 40 0 0 1 60 20" stroke="#22c55e" fill="none"/>
+          <circle cx="60" cy="20" r="5" fill="#7c5cfc"/>
+          <circle cx="100" cy="60" r="5" fill="#00c8ff"/>
+          <circle cx="60" cy="100" r="5" fill="#a855f7"/>
+          <circle cx="20" cy="60" r="5" fill="#22c55e"/>
+          <text x="53" y="46" fill="#7c5cfc" font-size="6" font-weight="700">设计</text>
+          <text x="72" y="64" fill="#00c8ff" font-size="6" font-weight="700">实验</text>
+          <text x="50" y="82" fill="#a855f7" font-size="6" font-weight="700">反馈</text>
+          <text x="28" y="64" fill="#22c55e" font-size="6" font-weight="700">迭代</text>
+          <polygon points="75,22 80,27 75,27" fill="#7c5cfc" opacity=".8"/>
+          <polygon points="98,75 103,75 98,80" fill="#00c8ff" opacity=".8"/>
+          <polygon points="45,98 40,93 45,93" fill="#a855f7" opacity=".8"/>
+          <polygon points="22,45 17,45 22,40" fill="#22c55e" opacity=".8"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PLATFORM ENTRIES ===== -->
+<section class="entries-section" id="entries">
+  <div class="section-inner section-center">
+    <div class="section-label">Platform Modules</div>
+    <h2 class="section-title reveal">平台入口</h2>
+    <p class="section-desc reveal">五大核心模块，覆盖材料研发全链路——从知识沉淀到自主实验。</p>
+    <div class="entries-grid">
+
+      <div class="entry-card reveal reveal-delay-1">
+        <div class="entry-icon">
+          <svg fill="none" stroke="#7c5cfc" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+          </svg>
+        </div>
+        <h3>知识库</h3>
+        <p>结构化知识引擎，将专家隐性经验转化为可检索、可关联、可验证的知识单元</p>
+        <a href="#" class="entry-btn">进入知识库</a>
+      </div>
+
+      <div class="entry-card reveal reveal-delay-2">
+        <div class="entry-icon">
+          <svg fill="none" stroke="#00c8ff" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 5.527a.75.75 0 01-.685.448H8.155a.75.75 0 01-.685-.448L5 14.5m14 0H5"/>
+          </svg>
+        </div>
+        <h3>配方库</h3>
+        <p>材料配方的统一管理与智能检索，积累研发经验，加速配方设计与优化</p>
+        <a href="#" class="entry-btn">进入配方库</a>
+      </div>
+
+      <div class="entry-card reveal reveal-delay-3">
+        <div class="entry-icon">
+          <svg fill="none" stroke="#a855f7" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>
+          </svg>
+        </div>
+        <h3>材料研发平台</h3>
+        <p>多智能体协作驱动的研发工作台，Agent 拆解任务、组织上下文、协同决策</p>
+        <a href="#" class="entry-btn">进入平台</a>
+      </div>
+
+      <div class="entry-card reveal reveal-delay-4">
+        <div class="entry-icon">
+          <svg fill="none" stroke="#22c55e" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/>
+          </svg>
+        </div>
+        <h3>材料设计</h3>
+        <p>AI 辅助的成分-工艺-性能设计优化，贝叶斯优化与多尺度预测模型协同</p>
+        <a href="#" class="entry-btn">进入设计</a>
+      </div>
+
+      <div class="entry-card reveal reveal-delay-5">
+        <div class="entry-icon">
+          <svg fill="none" stroke="#fb923c" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/>
+            <path d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1.001A3.75 3.75 0 0012 18z"/>
+          </svg>
+        </div>
+        <h3>AI 自主实验室</h3>
+        <p>自主设计—实验验证—数据反馈—方案迭代的全自动闭环，AI 自驱动自进化</p>
+        <a href="#" class="entry-btn">进入实验室</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== VISION ===== -->
+<section class="vision-section">
+  <div class="section-inner">
+    <div class="section-label">Vision</div>
+    <h2 class="section-title reveal">探索 AI for Materials 路径</h2>
+    <p class="vision-quote reveal">从一体化压铸泰坦合金，到 2200MPa 超强钢，再到高性能镁合金——通过 AI 赋能材料探索，为智能汽车、消费电子以及更多高端制造场景提供持续的底层技术支撑，也为材料研发范式升级提供新的实践样本。</p>
+    <div class="reveal">
+      <a href="#entries" class="btn btn-primary" style="padding:14px 32px;font-size:1rem">
+        开始使用平台
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 AI Materials Scientist. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="#">关于我们</a>
+      <a href="#">文档中心</a>
+      <a href="#">联系支持</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Tab switching
+document.querySelectorAll('.method-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.method-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Navbar scroll effect
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const navbar = document.querySelector('.navbar');
+  const scrollY = window.scrollY;
+  if (scrollY > 100) {
+    navbar.style.background = 'rgba(6,6,15,.92)';
+  } else {
+    navbar.style.background = 'rgba(6,6,15,.72)';
+  }
+  lastScroll = scrollY;
+}, { passive: true });
+</script>
+
+</body>
+</html>

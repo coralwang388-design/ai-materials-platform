@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Materials Scientist — 多智能体驱动的材料研发平台</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0a;--bg-elevated:#151517;--bg-card:#1a1a1e;--bg-card-hover:#222226;
+  --text:#f0f0f0;--text-secondary:#999;--text-dim:#666;
+  --accent:#5b8def;--accent-hover:#7aa4f5;
+  --border:#222;--border-hover:#3a3a3e;
+  --radius:12px;--radius-sm:8px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --max-w:1140px;
+  --section-py:100px;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+/* ===== NAV ===== */
+.nav{position:fixed;top:0;left:0;width:100%;z-index:100;
+  transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+.nav.scrolled{background:rgba(10,10,10,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom-color:var(--border)}
+.nav-inner{max-width:var(--max-w);margin:0 auto;padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-size:.95rem;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:10px;color:#fff}
+.nav-brand svg{width:28px;height:28px}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-size:.875rem;color:var(--text-secondary);transition:color .2s;position:relative}
+.nav-links a:hover{color:#fff}
+.nav-links a.active{color:#fff}
+.nav-links a.active::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1.5px;background:#fff;border-radius:1px}
+.nav-lang{font-size:.8rem;color:var(--text-dim);border:1px solid var(--border);border-radius:6px;padding:4px 12px;cursor:pointer;transition:all .2s}
+.nav-lang:hover{color:var(--text-secondary);border-color:var(--border-hover)}
+.nav-hamburger{display:none;background:none;border:none;color:#fff;cursor:pointer;padding:4px}
+
+/* ===== HERO ===== */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:url('images/hero-bg.png') center right/cover no-repeat, #0a0a0a}
+.hero-bg::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(to right,rgba(10,10,10,.92) 0%,rgba(10,10,10,.7) 40%,rgba(10,10,10,.2) 70%,transparent 100%)}
+.hero-bg::after{content:'';position:absolute;bottom:0;left:0;right:0;height:160px;
+  background:linear-gradient(to top,var(--bg),transparent)}
+.hero-glow{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:url('images/hero-bg.png') center right/cover no-repeat;
+  filter:brightness(2.2) contrast(1.3) saturate(1.6);
+  -webkit-mask-image:radial-gradient(circle 280px at var(--mx,50%) var(--my,50%),black 0%,transparent 70%);
+  mask-image:radial-gradient(circle 280px at var(--mx,50%) var(--my,50%),black 0%,transparent 70%);
+  opacity:0;transition:opacity .4s}
+.hero:hover .hero-glow{opacity:1}
+.hero-glow-soft{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .4s}
+.hero:hover .hero-glow-soft{opacity:1}
+.hero-glow-soft-inner{position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(80,170,255,.18) 0%,transparent 65%);
+  transform:translate(-50%,-50%);mix-blend-mode:screen}
+.hero-grid{position:absolute;inset:0;opacity:.04;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:60px 60px}
+.hero-content{position:relative;z-index:2;max-width:var(--max-w);margin:0 auto;padding:0 40px 0 24px;width:100%}
+.hero-label{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:20px;font-weight:500}
+.hero h1{font-size:clamp(2.4rem,5vw,3.6rem);font-weight:700;letter-spacing:-.03em;line-height:1.15;color:#fff;margin-bottom:20px}
+.hero-desc{font-size:1.05rem;color:var(--text-secondary);max-width:560px;line-height:1.85;margin-bottom:0}
+
+/* ===== DIVIDER ===== */
+.divider{max-width:var(--max-w);margin:0 auto;padding:0 40px}
+.divider-line{height:1px;background:var(--border)}
+
+/* ===== SECTIONS ===== */
+section{padding:var(--section-py) 0}
+.container{max-width:var(--max-w);margin:0 auto;padding:0 40px}
+.section-header{margin-bottom:56px}
+.section-tag{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;font-weight:500}
+.section-title{font-size:clamp(1.5rem,3vw,2rem);font-weight:700;letter-spacing:-.02em;color:#fff;line-height:1.3}
+.section-subtitle{font-size:1rem;color:var(--text-secondary);margin-top:12px;max-width:520px;line-height:1.8}
+.link-more{display:inline-flex;align-items:center;gap:6px;font-size:.875rem;color:var(--accent);font-weight:500;transition:all .2s}
+.link-more:hover{color:var(--accent-hover);gap:10px}
+.link-more svg{width:14px;height:14px;transition:transform .2s}
+.link-more:hover svg{transform:translateX(3px)}
+
+/* ===== COVERFLOW ===== */
+.coverflow-section{padding:var(--section-py) 0;overflow:hidden}
+
+/* Tabs row */
+.coverflow-tabs{display:flex;justify-content:center;gap:0;margin-bottom:52px;position:relative}
+.coverflow-tab{padding:14px 40px;font-size:.95rem;color:var(--text-dim);font-weight:400;cursor:pointer;
+  background:none;border:none;transition:all .4s;position:relative;white-space:nowrap;letter-spacing:.01em}
+.coverflow-tab:hover{color:var(--text-secondary)}
+.coverflow-tab.active{color:#fff;font-weight:600}
+
+/* 3D Stage */
+.coverflow-stage{position:relative;width:100%;height:520px;perspective:1800px;perspective-origin:50% 45%}
+
+/* Each card */
+.coverflow-item{position:absolute;top:0;left:50%;
+  width:min(720px,62vw);aspect-ratio:16/10;margin-left:min(-360px,-31vw);
+  border-radius:20px;overflow:hidden;background:#111;
+  transition:all .65s cubic-bezier(.32,.94,.6,1);cursor:pointer;
+  transform-style:preserve-3d;-webkit-transform-style:preserve-3d;
+  will-change:transform,opacity}
+.coverflow-item img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;
+  border-radius:20px}
+
+/* Center */
+.coverflow-item[data-pos="0"]{
+  transform:translateX(0) translateZ(0) rotateY(0deg) scale(1);
+  z-index:10;opacity:1;
+  box-shadow:0 30px 100px -20px rgba(0,0,0,.7)}
+
+/* Left -1 */
+.coverflow-item[data-pos="-1"]{
+  transform:translateX(-68%) translateZ(-180px) rotateY(42deg) scale(.78);
+  z-index:5;opacity:.65;
+  box-shadow:0 15px 50px -10px rgba(0,0,0,.5)}
+
+/* Right +1 */
+.coverflow-item[data-pos="1"]{
+  transform:translateX(68%) translateZ(-180px) rotateY(-42deg) scale(.78);
+  z-index:5;opacity:.65;
+  box-shadow:0 15px 50px -10px rgba(0,0,0,.5)}
+
+/* Far hidden */
+.coverflow-item[data-pos="-2"]{
+  transform:translateX(-130%) translateZ(-350px) rotateY(55deg) scale(.55);
+  z-index:1;opacity:0;pointer-events:none}
+.coverflow-item[data-pos="2"]{
+  transform:translateX(130%) translateZ(-350px) rotateY(-55deg) scale(.55);
+  z-index:1;opacity:0;pointer-events:none}
+
+/* Arrows */
+.coverflow-arrows{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:min(780px,68vw);display:flex;justify-content:space-between;z-index:12;pointer-events:none}
+.coverflow-arrow{width:52px;height:52px;border-radius:50%;border:1px solid rgba(255,255,255,.15);
+  background:rgba(0,0,0,.35);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:rgba(255,255,255,.8);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .25s;pointer-events:auto}
+.coverflow-arrow:hover{background:rgba(0,0,0,.55);border-color:rgba(255,255,255,.3);color:#fff}
+.coverflow-arrow:active{transform:scale(.92)}
+.coverflow-arrow svg{width:20px;height:20px}
+.coverflow-arrow.disabled{opacity:.25;pointer-events:none}
+
+/* Info below */
+.coverflow-info{max-width:min(720px,62vw);margin:36px auto 0;padding:0 20px;min-height:72px}
+.coverflow-info-inner{transition:opacity .35s,transform .35s}
+.coverflow-info-inner.fading{opacity:0;transform:translateY(8px)}
+.coverflow-info-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.coverflow-info-title h3{font-size:1.35rem;font-weight:700;color:#fff;letter-spacing:-.015em}
+.coverflow-info-title a{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);
+  display:inline-flex;align-items:center;justify-content:center;color:var(--text-secondary);transition:all .2s;flex-shrink:0}
+.coverflow-info-title a:hover{border-color:var(--border-hover);color:#fff}
+.coverflow-info p{font-size:.92rem;color:var(--text-secondary);line-height:1.75}
+
+/* ===== PAIN POINTS ===== */
+.pain-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.pain-row{display:grid;grid-template-columns:80px 1fr;align-items:stretch;transition:background .25s}
+.pain-row:not(:last-child){border-bottom:1px solid var(--border)}
+.pain-row:hover{background:var(--bg-card)}
+.pain-num{display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;
+  color:rgba(255,255,255,.08);border-right:1px solid var(--border);font-variant-numeric:tabular-nums}
+.pain-body{padding:28px 32px}
+.pain-body h3{font-size:1rem;font-weight:600;color:#fff;margin-bottom:6px}
+.pain-body p{font-size:.88rem;color:var(--text-secondary);line-height:1.75}
+
+/* ===== METHODOLOGY ===== */
+.method-showcase{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg-elevated);margin-bottom:24px}
+.method-showcase-img{overflow:hidden;background:#111}
+.method-showcase-img img{width:100%;height:100%;object-fit:cover;display:block}
+.method-showcase-body{padding:44px 40px;display:flex;flex-direction:column;justify-content:center}
+.method-showcase-body .method-num{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;font-weight:600}
+.method-showcase-body h3{font-size:1.4rem;font-weight:700;color:#fff;margin-bottom:14px;line-height:1.35}
+.method-showcase-body p{font-size:.9rem;color:var(--text-secondary);line-height:1.85}
+.method-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.method-card{background:var(--bg-elevated);padding:32px 28px;transition:background .3s;position:relative}
+.method-card:hover{background:var(--bg-card)}
+.method-card .method-num{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:16px;font-weight:600}
+.method-card h3{font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:12px;line-height:1.35}
+.method-card p{font-size:.86rem;color:var(--text-secondary);line-height:1.8}
+.method-card-img{width:100%;border-radius:var(--radius-sm);overflow:hidden;margin-top:16px;border:1px solid var(--border)}
+.method-card-img img{width:100%;display:block}
+
+/* ===== PLATFORM ENTRIES — SIDEBAR NAV ===== */
+#entries{overflow:hidden;padding:0}
+#entries .container{max-width:100%;padding:0}
+.entries-header{padding-left:40px;margin-bottom:0}
+.entries-layout{position:relative}
+.entries-nav{position:fixed;left:40px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:0;
+  z-index:50;opacity:0;pointer-events:none;transition:opacity .3s}
+.entries-nav.visible{opacity:1;pointer-events:auto}
+.entries-nav::before{content:'';position:absolute;left:4px;top:0;bottom:0;width:1px;background:rgba(255,255,255,.12)}
+.entries-nav-dot{position:relative;padding:8px 0 8px 28px;font-size:.88rem;color:rgba(255,255,255,.35);cursor:pointer;
+  transition:all .3s;font-weight:400;white-space:nowrap}
+.entries-nav-dot::after{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:9px;height:9px;
+  border-radius:50%;border:1.5px solid rgba(255,255,255,.2);background:transparent;transition:all .3s}
+.entries-nav-dot:hover{color:rgba(255,255,255,.6)}
+.entries-nav-dot.active{color:#fff;font-weight:600}
+.entries-nav-dot.active::after{background:var(--accent);border-color:var(--accent)}
+.entries-panels{display:flex;flex-direction:column;gap:0}
+.entry-panel{display:grid;grid-template-columns:1fr 1.4fr;gap:32px;align-items:center;
+  padding:0 0 0 240px;min-height:100vh}
+.entry-panel-text{padding-right:16px}
+.entry-panel-text .entry-panel-tag{font-size:.82rem;color:var(--accent);font-weight:500;margin-bottom:12px;letter-spacing:.02em}
+.entry-panel-text h3{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;color:#fff;margin-bottom:32px;letter-spacing:-.02em;line-height:1.25}
+.entry-panel-text p{font-size:.95rem;color:rgba(255,255,255,.5);line-height:1.8;margin-bottom:24px}
+.entry-panel-text ul{list-style:disc;padding-left:20px;margin-bottom:28px}
+.entry-panel-text ul li{font-size:.9rem;color:rgba(255,255,255,.5);line-height:1.8;padding:2px 0}
+.entry-panel-text .entry-link{font-size:.88rem;color:var(--text-secondary);font-weight:500;display:inline-flex;align-items:center;gap:8px;
+  padding:12px 24px;border:1px solid rgba(255,255,255,.15);border-radius:8px;transition:all .2s}
+.entry-panel-text .entry-link:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.entry-panel-text .entry-link svg{width:14px;height:14px}
+.entry-panel-img{overflow:hidden;position:relative}
+.entry-panel-img img{width:140%;max-width:none;display:block;border-radius:12px 0 0 12px;border:1px solid rgba(255,255,255,.08);border-right:none}
+.entry-panel-img.placeholder{aspect-ratio:2864/1536;background:#0a0a0a;border-radius:12px 0 0 12px;border:1px solid rgba(255,255,255,.08);border-right:none}
+
+/* ===== VISION ===== */
+.vision{border-top:1px solid var(--border);padding:80px 0}
+.vision-inner{max-width:var(--max-w);margin:0 auto;padding:0 40px;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.vision-text h2{font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:16px;letter-spacing:-.01em;line-height:1.35}
+.vision-text p{font-size:.92rem;color:var(--text-secondary);line-height:1.85;margin-bottom:28px}
+.btn-seed{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border-radius:var(--radius-sm);
+  font-size:.875rem;font-weight:600;background:#fff;color:#0a0a0a;border:none;cursor:pointer;transition:all .2s}
+.btn-seed:hover{background:#e8e8e8;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:#fff;border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.05);border-color:var(--border-hover)}
+.vision-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.stat-cell{background:var(--bg-elevated);padding:32px 28px;text-align:center}
+.stat-cell .num{font-size:2rem;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.stat-cell .label{font-size:.78rem;color:var(--text-dim);letter-spacing:.02em}
+
+/* ===== FOOTER ===== */
+.footer{border-top:1px solid var(--border);padding:56px 0 40px;margin-top:20px}
+.footer-inner{max-width:var(--max-w);margin:0 auto;padding:0 40px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.footer-brand p{font-size:.85rem;color:var(--text-dim);line-height:1.7;margin-top:12px;max-width:280px}
+.footer-col h4{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);
+  margin-bottom:16px;font-weight:600}
+.footer-col a{display:block;font-size:.875rem;color:var(--text-secondary);padding:4px 0;transition:color .2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:24px;
+  border-top:1px solid var(--border);flex-wrap:wrap;gap:12px}
+.footer-bottom p{font-size:.78rem;color:var(--text-dim)}
+.footer-bottom a{font-size:.78rem;color:var(--text-dim);transition:color .2s}
+.footer-bottom a:hover{color:var(--text-secondary)}
+
+/* ===== SCROLL REVEAL ===== */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.r-d1{transition-delay:.05s}.r-d2{transition-delay:.1s}.r-d3{transition-delay:.15s}
+.r-d4{transition-delay:.2s}.r-d5{transition-delay:.25s}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  .method-showcase{grid-template-columns:1fr}
+  .method-showcase-img{aspect-ratio:16/9}
+  .method-grid{grid-template-columns:1fr}
+  .entries-nav{display:none}
+  .entry-panel{grid-template-columns:1fr;gap:24px;min-height:auto;padding:48px 20px}
+  .entry-panel-img img{width:100%;border-radius:12px;border-right:1px solid rgba(255,255,255,.08)}
+  .vision-inner{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .coverflow-stage{height:380px}
+  .coverflow-arrows{width:70vw}
+}
+@media(max-width:640px){
+  :root{--section-py:64px}
+  .nav-links{display:none;position:absolute;top:60px;left:0;right:0;
+    background:rgba(10,10,10,.96);backdrop-filter:blur(16px);flex-direction:column;
+    padding:16px 24px;gap:8px;border-bottom:1px solid var(--border)}
+  .nav-links.open{display:flex}
+  .nav-hamburger{display:block}
+  .nav-inner,.container,.hero-content,.vision-inner,.footer-inner{padding-left:20px;padding-right:20px}
+  .coverflow-stage{height:240px}
+  .coverflow-arrow{width:40px;height:40px}
+  .coverflow-tab{padding:10px 16px;font-size:.82rem}
+  .hero{min-height:420px}
+  .hero-content{padding-top:120px;padding-bottom:56px}
+  .method-showcase-body{padding:28px 24px}
+  .vision-stats{grid-template-columns:1fr 1fr}
+  .footer-grid{grid-template-columns:1fr;gap:32px}
+  .footer-bottom{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="mainNav">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <svg viewBox="0 0 28 28" fill="none">
+        <rect width="28" height="28" rx="6" fill="#fff" fill-opacity=".08"/>
+        <path d="M7 19V9l7 5-7 5z" fill="#fff" fill-opacity=".9"/>
+        <path d="M14 19V9l7 5-7 5z" fill="#fff" fill-opacity=".4"/>
+      </svg>
+      AI Materials Scientist
+    </a>
+    <button class="nav-hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h14M4 11h14M4 15h14"/></svg>
+    </button>
+    <div class="nav-links">
+      <a href="#" class="active">首页</a>
+      <a href="#achievements">落地成果</a>
+      <a href="#entries">平台入口</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="heroSection">
+  <div class="hero-bg"></div>
+  <div class="hero-glow" id="heroGlow"></div>
+  <div class="hero-glow-soft"><div class="hero-glow-soft-inner" id="heroGlowSoft"></div></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-label reveal">Multi-Agent Driven Platform</div>
+    <h1 class="reveal r-d1">AI Materials Scientist</h1>
+    <p class="hero-desc reveal r-d2">基于大模型推理与多智能体协作，构建面向材料研发的结构化知识引擎与自驱动实验体系，探索数据、模型、知识与实验协同驱动的材料研发新范式。</p>
+  </div>
+</section>
+
+<div class="divider"><div class="divider-line"></div></div>
+
+<!-- ACHIEVEMENTS — 3D COVERFLOW -->
+<section class="coverflow-section" id="achievements">
+  <div class="container" style="text-align:center;margin-bottom:8px">
+    <div class="section-tag reveal" style="display:inline-block">Research Progress</div>
+    <h2 class="section-title reveal r-d1" style="margin-bottom:0">落地成果</h2>
+  </div>
+
+  <nav class="coverflow-tabs reveal r-d2" id="coverflowTabs">
+    <button class="coverflow-tab" data-idx="0">泰坦合金</button>
+    <button class="coverflow-tab active" data-idx="1">小米超强钢</button>
+    <button class="coverflow-tab" data-idx="2">高性能镁合金</button>
+  </nav>
+
+  <div class="reveal r-d3" style="position:relative">
+    <div class="coverflow-stage" id="coverflowStage">
+      <div class="coverflow-item" data-idx="0"><img src="images/titan.jpg" alt="小米泰坦合金"></div>
+      <div class="coverflow-item" data-idx="1"><img src="images/steel.jpg" alt="2200MPa 小米超强钢"></div>
+      <div class="coverflow-item" data-idx="2"><img src="images/magnesium.jpg" alt="高性能镁合金"></div>
+    </div>
+    <div class="coverflow-arrows">
+      <button class="coverflow-arrow" id="cfPrev" aria-label="上一张">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path d="M13 4L7 10l6 6"/></svg>
+      </button>
+      <button class="coverflow-arrow" id="cfNext" aria-label="下一张">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 20 20"><path d="M7 4l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="coverflow-info" id="coverflowInfo">
+    <div class="coverflow-info-inner" id="cfInner">
+      <div class="coverflow-info-title">
+        <h3 id="cfTitle">2200MPa 小米超强钢</h3>
+        <a href="#">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 16 16"><path d="M4 12L12 4M12 4H6M12 4v6"/></svg>
+        </a>
+      </div>
+      <p id="cfDesc">联合王国栋院士团队、育材堂、东北大学，结合小米 AI 模型，从 2443 万种配方筛选而成。抗拉强度 +40%，屈服强度 +24%。</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- PLATFORM ENTRIES -->
+<nav class="entries-nav" id="entriesNav">
+  <div class="entries-nav-dot active" data-target="panel-knowledge">知识库</div>
+  <div class="entries-nav-dot" data-target="panel-platform">材料研发平台</div>
+  <div class="entries-nav-dot" data-target="panel-design">材料设计</div>
+  <div class="entries-nav-dot" data-target="panel-lab">AI 自主实验室</div>
+  <div class="entries-nav-dot" data-target="panel-formula">配方库</div>
+</nav>
+<section id="entries">
+  <div class="container">
+
+      <div class="entries-panels" id="entriesPanels">
+        <div class="entry-panel" id="panel-knowledge">
+          <div class="entry-panel-text">
+            <div class="entry-panel-tag">知识库</div>
+            <h3>将隐性经验转化为<br>可检索的知识单元</h3>
+            <p>结构化知识引擎，将专家隐性经验转化为可检索、可关联、可验证的知识单元。</p>
+            <ul>
+              <li>文献自动解析与结构化</li>
+              <li>领域知识图谱构建</li>
+              <li>案例拆解与专家反馈闭环</li>
+            </ul>
+            <a href="#" class="entry-link">了解更多关于知识库 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4"/></svg></a>
+          </div>
+          <div class="entry-panel-img"><img src="images/knowledge-preview.jpg" alt="知识库界面"></div>
+        </div>
+
+        <div class="entry-panel" id="panel-platform">
+          <div class="entry-panel-text">
+            <div class="entry-panel-tag">材料研发平台</div>
+            <h3>多智能体协作驱动的<br>研发工作台</h3>
+            <p>Agent 拆解任务、组织上下文、协同决策，支持从文献调研到实验设计的全流程自动化。</p>
+            <ul>
+              <li>任务自动拆解与分配</li>
+              <li>多 Agent 协同推理</li>
+              <li>研发流程可视化</li>
+            </ul>
+            <a href="materials-rd-studio.html" class="entry-link">了解更多关于研发平台 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4"/></svg></a>
+          </div>
+          <div class="entry-panel-img"><img src="images/platform-preview.gif" alt="材料研发平台界面"></div>
+        </div>
+
+        <div class="entry-panel" id="panel-design">
+          <div class="entry-panel-text">
+            <div class="entry-panel-tag">材料设计</div>
+            <h3>AI 辅助的成分-工艺-性能<br>设计优化</h3>
+            <p>贝叶斯优化与多尺度预测模型协同，实现高维设计空间的高效探索。</p>
+            <ul>
+              <li>成分-工艺-性能关联建模</li>
+              <li>贝叶斯主动学习优化</li>
+              <li>多目标帕累托前沿搜索</li>
+            </ul>
+            <a href="#" class="entry-link">了解更多关于材料设计 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4"/></svg></a>
+          </div>
+          <div class="entry-panel-img"><img src="images/design-preview.jpg" alt="材料设计界面"></div>
+        </div>
+
+        <div class="entry-panel" id="panel-lab">
+          <div class="entry-panel-text">
+            <div class="entry-panel-tag">AI 自主实验室</div>
+            <h3>全自动闭环<br>AI 自驱动自进化</h3>
+            <p>自主设计—实验验证—数据反馈—方案迭代，实现从假设生成到实验验证的端到端自动化。</p>
+            <ul>
+              <li>实验方案自动生成</li>
+              <li>机器人执行与数据采集</li>
+              <li>结果反馈驱动迭代优化</li>
+            </ul>
+            <a href="#" class="entry-link">了解更多关于自主实验室 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4"/></svg></a>
+          </div>
+          <div class="entry-panel-img"><img src="images/lab-preview.gif" alt="AI自主实验室界面"></div>
+        </div>
+
+        <div class="entry-panel" id="panel-formula">
+          <div class="entry-panel-text">
+            <div class="entry-panel-tag">配方库</div>
+            <h3>材料配方的统一管理<br>与智能检索</h3>
+            <p>积累研发经验，加速配方设计与优化流程。</p>
+            <ul>
+              <li>多维度配方筛选与对比</li>
+              <li>版本管理与谱系追溯</li>
+              <li>配方生成与推荐</li>
+            </ul>
+            <a href="#" class="entry-link">了解更多关于配方库 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 12 12"><path d="M4 2l4 4-4 4"/></svg></a>
+          </div>
+          <div class="entry-panel-img placeholder"></div>
+        </div>
+      </div>
+  </div>
+</section>
+
+<!-- VISION -->
+<section class="vision">
+  <div class="vision-inner">
+    <div class="vision-text reveal">
+      <h2>探索面向真实工业场景的<br>AI Materials Scientist 路径</h2>
+      <p>从一体化压铸泰坦合金，到 2200MPa 超强钢，再到高性能镁合金——通过 AI 赋能材料探索，为智能汽车、消费电子以及更多高端制造场景提供持续的底层技术支撑。</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a href="#entries" class="btn-seed">开始使用</a>
+        <a href="#" class="btn-seed btn-ghost">查看文档</a>
+      </div>
+    </div>
+    <div class="vision-stats reveal r-d2">
+      <div class="stat-cell">
+        <div class="num">2443万+</div>
+        <div class="label">候选材料空间搜索</div>
+      </div>
+      <div class="stat-cell">
+        <div class="num">3</div>
+        <div class="label">材料体系量产验证</div>
+      </div>
+      <div class="stat-cell">
+        <div class="num">5</div>
+        <div class="label">核心平台模块</div>
+      </div>
+      <div class="stat-cell">
+        <div class="num">∞</div>
+        <div class="label">自进化闭环迭代</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-brand" style="font-size:.9rem">
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="6" fill="#fff" fill-opacity=".08"/>
+            <path d="M7 19V9l7 5-7 5z" fill="#fff" fill-opacity=".9"/>
+            <path d="M14 19V9l7 5-7 5z" fill="#fff" fill-opacity=".4"/>
+          </svg>
+          AI Materials Scientist
+        </div>
+        <p>多智能体驱动的材料研发平台，探索数据、模型、知识与实验协同驱动的新范式。</p>
+      </div>
+      <div class="footer-col">
+        <h4>平台模块</h4>
+        <a href="#">知识库</a>
+        <a href="#">配方库</a>
+        <a href="materials-rd-studio.html">材料研发平台</a>
+        <a href="#">材料设计</a>
+        <a href="#">AI 自主实验室</a>
+      </div>
+      <div class="footer-col">
+        <h4>落地成果</h4>
+        <a href="#">泰坦合金</a>
+        <a href="#">超强钢</a>
+        <a href="#">轻合金</a>
+      </div>
+      <div class="footer-col">
+        <h4>了解更多</h4>
+        <a href="#">技术博客</a>
+        <a href="#">联系我们</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 AI Materials Scientist. All rights reserved.</p>
+      <div style="display:flex;gap:20px">
+        <a href="#">隐私政策</a>
+        <a href="#">使用条款</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Navbar scroll
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+// Hero glow follow mouse
+(function(){
+  const hero = document.getElementById('heroSection');
+  const glow = document.getElementById('heroGlow');
+  const soft = document.getElementById('heroGlowSoft');
+  let rafId = null;
+  hero.addEventListener('mousemove', e => {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      const rect = hero.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      glow.style.setProperty('--mx', x + 'px');
+      glow.style.setProperty('--my', y + 'px');
+      soft.style.left = x + 'px';
+      soft.style.top = y + 'px';
+      rafId = null;
+    });
+  });
+})();
+
+// Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// 3D Coverflow
+(function(){
+  const items = Array.from(document.querySelectorAll('.coverflow-item'));
+  const tabs = Array.from(document.querySelectorAll('.coverflow-tab'));
+  const titleEl = document.getElementById('cfTitle');
+  const descEl = document.getElementById('cfDesc');
+  const inner = document.getElementById('cfInner');
+  const prevBtn = document.getElementById('cfPrev');
+  const nextBtn = document.getElementById('cfNext');
+  const count = items.length;
+  let current = 1;
+  let animating = false;
+
+  const data = [
+    { title: '一体化压铸泰坦合金',
+      desc: '国内唯一拥有量产自研核心材料的车厂。小米研发团队与国家级材料重点实验室合作，配方 AI 仿真筛选 1016 万种，测试打样 1550 次。' },
+    { title: '2200MPa 小米超强钢',
+      desc: '联合王国栋院士团队、育材堂、东北大学，结合小米 AI 模型，从 2443 万种配方筛选而成。相比 1500MPa 热成型钢，抗拉强度 +40%，屈服强度 +24%。' },
+    { title: '交大&小米高性能镁合金',
+      desc: '联合开发高性能镁合金——强韧性能：屈服强度提高 15.3MPa，冲击功提升 26%；耐蚀性能达 0.027mm/年，世界最佳水平；阻燃性能：燃点达 730.26°C。' }
+  ];
+
+  function layout() {
+    items.forEach((item, i) => {
+      const offset = i - current;
+      item.setAttribute('data-pos', Math.max(-2, Math.min(2, offset)));
+    });
+    tabs.forEach((t, i) => t.classList.toggle('active', i === current));
+    prevBtn.classList.toggle('disabled', current === 0);
+    nextBtn.classList.toggle('disabled', current === count - 1);
+  }
+
+  function setInfo(animate) {
+    const d = data[current];
+    if (animate) {
+      inner.classList.add('fading');
+      setTimeout(() => {
+        titleEl.textContent = d.title;
+        descEl.textContent = d.desc;
+        inner.classList.remove('fading');
+      }, 300);
+    } else {
+      titleEl.textContent = d.title;
+      descEl.textContent = d.desc;
+    }
+  }
+
+  function goTo(idx) {
+    if (animating || idx < 0 || idx >= count || idx === current) return;
+    animating = true;
+    current = idx;
+    layout();
+    setInfo(true);
+    setTimeout(() => { animating = false; }, 650);
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+  tabs.forEach(t => t.addEventListener('click', () => goTo(+t.dataset.idx)));
+  items.forEach(it => it.addEventListener('click', () => goTo(+it.dataset.idx)));
+
+  // Swipe
+  let sx = 0, sd = 0;
+  const stage = document.getElementById('coverflowStage');
+  stage.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sd = 0; }, { passive: true });
+  stage.addEventListener('touchmove', e => { sd = e.touches[0].clientX - sx; }, { passive: true });
+  stage.addEventListener('touchend', () => { if (Math.abs(sd) > 40) goTo(current + (sd < 0 ? 1 : -1)); });
+
+  // Mouse drag on stage
+  let mx = 0, md = 0, dragging = false;
+  stage.addEventListener('mousedown', e => { dragging = true; mx = e.clientX; md = 0; e.preventDefault(); });
+  window.addEventListener('mousemove', e => { if (dragging) md = e.clientX - mx; });
+  window.addEventListener('mouseup', () => {
+    if (dragging && Math.abs(md) > 40) goTo(current + (md < 0 ? 1 : -1));
+    dragging = false;
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') goTo(current + 1);
+    if (e.key === 'ArrowLeft') goTo(current - 1);
+  });
+
+  layout();
+  setInfo(false);
+})();
+
+// Entries sidebar nav — fixed position, show/hide on scroll
+(function(){
+  const section = document.getElementById('entries');
+  const navEl = document.getElementById('entriesNav');
+  const navItems = document.querySelectorAll('.entries-nav-dot');
+  const panels = document.querySelectorAll('.entry-panel');
+
+  // Show/hide nav based on section visibility
+  const sectionObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      navEl.classList.toggle('visible', e.isIntersecting);
+    });
+  }, { threshold: 0 });
+  sectionObs.observe(section);
+
+  // Track active panel
+  const panelObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navItems.forEach(n => n.classList.remove('active'));
+        const target = document.querySelector('.entries-nav-dot[data-target="' + e.target.id + '"]');
+        if (target) target.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3, rootMargin: '-30% 0px -30% 0px' });
+  panels.forEach(p => panelObs.observe(p));
+
+  // Click to scroll
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const panel = document.getElementById(item.dataset.target);
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
